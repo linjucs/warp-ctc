@@ -22,7 +22,7 @@ typedef enum {
 } ctcStatus_t;
 
 /** Returns a single integer which specifies the API version of the warpctc library */
-int get_warpctc_version();
+int get_warpctc_version(void);
 
 /** Returns a string containing a description of status that was passed in
  *  \param[in] status identifies which string should be returned
@@ -54,6 +54,7 @@ struct ctcOptions {
     /// the label value/index that the CTC calculation should use as the blank label
     int blank_label;
 };
+typedef struct ctcOptions ctcOptions;
 
 /** Compute the connectionist temporal classification loss between a sequence
  *  of probabilities and a ground truth labeling.  Optionally compute the
