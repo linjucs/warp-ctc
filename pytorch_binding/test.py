@@ -14,6 +14,15 @@ def softmax(acts):
 def wrap_and_call(ctc_fn, acts, labels, lengths):
     acts = autograd.Variable(torch.FloatTensor(acts),
                              requires_grad=True)
+    if use_cuda:
+        acts = acts.cuda()
+
+    # HACK: For some reason just when using CUDA .grad
+    # for acts doesn't get saved
+    def grad_hook(grad):
+        acts.saved_grad = grad.clone()
+    acts.register_hook(grad_hook)
+
     label_lengths = [len(l) for l in labels]
     labels = [l for label in labels for l in label]
     labels = autograd.Variable(torch.IntTensor(labels))
@@ -26,7 +35,12 @@ def wrap_and_call(ctc_fn, acts, labels, lengths):
     cost = torch.sum(costs)
     cost.backward()
 
-    return costs.data.numpy(), acts.grad.data.numpy()
+    grads = acts.saved_grad
+    if use_cuda:
+        costs = costs.cpu()
+        grads = grads.cpu()
+
+    return costs.data.numpy(), grads.data.numpy()
 
 def small_test():
     acts = np.array([[0.1, 0.6, 0.1, 0.1, 0.1],
@@ -108,6 +122,12 @@ def big_test():
         "big_test grads for average cost mismatch."
 
 if __name__ == "__main__":
+    use_cuda = False
     small_test()
     big_test()
-    print("Tests passed!")
+    print("CPU Tests passed!")
+    if torch.cuda.is_available():
+        use_cuda = True
+        small_test()
+    print("GPU Tests passed!")
+

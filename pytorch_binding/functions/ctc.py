@@ -36,19 +36,31 @@ class CTC(Function):
         Returns:
             costs (FloatTensor): .
         """
+        use_cuda = activations.is_cuda
+
+        certify_inputs(activations, labels, lengths, label_lengths)
+
         costs = torch.zeros(activations.size()[0])
 
         # Transpose minibatch and time for compatability with warp-ctc
         activations = torch.transpose(activations, 0, 1).contiguous()
-        grads = torch.zeros(activations.size())
-
+        grads = activations.new(activations.size())
         blank_label = self.blank_label
         if blank_label is None:
             blank_label = activations.size()[-1] - 1
-        ctc.ctc_cost_and_grad(activations, labels,
-                              lengths, label_lengths,
-                              costs, grads, blank_label)
+
+        if use_cuda:
+            ctc.ctc_cost_and_grad_cuda(activations, labels,
+                                  lengths, label_lengths,
+                                  costs, grads, blank_label)
+        else:
+            ctc.ctc_cost_and_grad(activations, labels,
+                                  lengths, label_lengths,
+                                  costs, grads, blank_label)
         self._grads = grads
+        if use_cuda:
+            costs = costs.cuda()
+
         return costs
 
     def backward(self, cost):
@@ -74,4 +86,39 @@ class CTCLoss(CTC):
         if self.size_average:
             grads = grads / grads.size()[0]
         return grads, None, None, None
+
+def check_type(var, t, name):
+    if type(var) is not t:
+        raise TypeError("{} must be {}".format(name, t))
+
+def check_contiguous(var, name):
+    if not var.is_contiguous():
+        raise ValueError("{} must be contiguous".format(name))
+
+def check_dim(var, dim, name):
+    if len(var.size()) != dim:
+        raise ValueError("{} must be {}D".format(name, dim))
+
+def certify_inputs(activations, labels, lengths, label_lengths):
+
+    if activations.is_cuda:
+        check_type(activations, torch.cuda.FloatTensor, "activations")
+    else:
+        check_type(activations, torch.FloatTensor, "activations")
+    check_type(labels, torch.IntTensor, "labels")
+    check_type(label_lengths, torch.IntTensor, "label_lengths")
+    check_type(lengths, torch.IntTensor, "lengths")
+    check_contiguous(labels, "labels")
+    check_contiguous(label_lengths, "label_lengths")
+    check_contiguous(lengths, "lengths")
+
+    if lengths.size()[0] != activations.size()[0]:
+        raise ValueError("must have a length per example.")
+    if label_lengths.size()[0] != activations.size()[0]:
+        raise ValueError("must have a label length per example.")
+
+    check_dim(activations, 3, "activations")
+    check_dim(labels, 1, "labels")
+    check_dim(lengths, 1, "lenghts")
+    check_dim(label_lengths, 1, "label_lenghts")
 
