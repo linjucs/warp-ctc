@@ -2,13 +2,14 @@ import os
 import torch
 from torch.utils.ffi import create_extension
 
-this_file = os.path.dirname(__file__)
+this_file = os.path.abspath(__file__)
+warp_root = os.path.dirname(os.path.dirname(this_file))
 
 sources = ['src/warp_ctc.c']
 headers = ['src/warp_ctc.h']
-include_dirs = ['/afs/cs.stanford.edu/u/awni/scr/warp-ctc/include/']
+include_dirs = [os.path.join(warp_root, 'include')]
 libraries = ['warpctc']
-library_dirs = ['/afs/cs.stanford.edu/u/awni/scr/warp-ctc/build/']
+library_dirs = [os.path.join(warp_root, 'build')]
 defines = []
 with_cuda = False
 
