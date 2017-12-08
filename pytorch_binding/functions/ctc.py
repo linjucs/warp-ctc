@@ -44,7 +44,7 @@ class CTC(Function):
 
         # Transpose minibatch and time for compatability with warp-ctc
         activations = torch.transpose(activations, 0, 1).contiguous()
-        grads = activations.new(activations.size())
+        grads = activations.new(activations.size()).zero_()
         blank_label = self.blank_label
         if blank_label is None:
             blank_label = activations.size()[-1] - 1
