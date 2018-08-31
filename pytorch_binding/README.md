@@ -1,7 +1,7 @@
 
 ## Install
 
-1. Follow top-level [README.md](warp-ctc/blob/master/README.md#compilation) and
+1. Follow top-level [README.md](../README.md#compilation) and
    install warp-ctc.
 2. Install [PyTorch](https://pytorch.org/)
 3. In this directory run `python build.py`. 
