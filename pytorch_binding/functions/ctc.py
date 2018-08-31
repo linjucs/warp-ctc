@@ -88,7 +88,7 @@ class CTCLoss(CTC):
         return grads, None, None, None
 
 def check_type(var, t, name):
-    if type(var) is not t:
+    if var.dtype is not t:
         raise TypeError("{} must be {}".format(name, t))
 
 def check_contiguous(var, name):
@@ -101,13 +101,10 @@ def check_dim(var, dim, name):
 
 def certify_inputs(activations, labels, lengths, label_lengths):
 
-    if activations.is_cuda:
-        check_type(activations, torch.cuda.FloatTensor, "activations")
-    else:
-        check_type(activations, torch.FloatTensor, "activations")
-    check_type(labels, torch.IntTensor, "labels")
-    check_type(label_lengths, torch.IntTensor, "label_lengths")
-    check_type(lengths, torch.IntTensor, "lengths")
+    check_type(activations, torch.float32, "activations")
+    check_type(labels, torch.int32, "labels")
+    check_type(label_lengths, torch.int32, "label_lengths")
+    check_type(lengths, torch.int32, "lengths")
     check_contiguous(labels, "labels")
     check_contiguous(label_lengths, "label_lengths")
     check_contiguous(lengths, "lengths")

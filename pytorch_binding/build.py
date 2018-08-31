@@ -1,4 +1,5 @@
 import os
+import sys
 import torch
 from torch.utils.ffi import create_extension
 
@@ -20,6 +21,8 @@ if torch.cuda.is_available():
     defines += [('WITH_CUDA', None)]
     with_cuda = True
 
+    if len(sys.argv) > 1:
+        include_dirs += [sys.argv[1]]
 
 ffi = create_extension(
     '_ext.ctc',
@@ -33,5 +36,4 @@ ffi = create_extension(
     library_dirs=library_dirs
 )
 
-if __name__ == '__main__':
-    ffi.build()
+ffi.build()
