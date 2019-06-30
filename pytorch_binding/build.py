@@ -1,7 +1,7 @@
 import os
 import sys
 import torch
-from torch.utils.ffi import create_extension
+from torch.utils.cpp_extension import BuildExtension
 
 this_file = os.path.abspath(__file__)
 warp_root = os.path.dirname(os.path.dirname(this_file))
@@ -24,7 +24,7 @@ if torch.cuda.is_available():
     if len(sys.argv) > 1:
         include_dirs += [sys.argv[1]]
 
-ffi = create_extension(
+ffi = BuildExtension(
     '_ext.ctc',
     headers=headers,
     sources=sources,
