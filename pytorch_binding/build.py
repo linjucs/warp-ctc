@@ -1,8 +1,8 @@
 import os
 import sys
 import torch
-from torch.utils.cpp_extension import BuildExtension
-
+from torch.utils.cpp_extension import BuildExtension, CUDAExtension
+from setuptools import setup
 this_file = os.path.abspath(__file__)
 warp_root = os.path.dirname(os.path.dirname(this_file))
 
@@ -24,16 +24,30 @@ if torch.cuda.is_available():
     if len(sys.argv) > 1:
         include_dirs += [sys.argv[1]]
 
-ffi = BuildExtension(
-    '_ext.ctc',
-    headers=headers,
-    sources=sources,
-    include_dirs=include_dirs,
-    relative_to=__file__,
-    define_macros=defines,
-    with_cuda=with_cuda,
-    libraries=libraries,
-    library_dirs=library_dirs
-)
+# ffi = CUDAExtension(
+#     '_ext.ctc',
+#     headers=headers,
+#     sources=sources,
+#     include_dirs=include_dirs,
+#     relative_to=__file__,
+#     define_macros=defines,
+#     with_cuda=with_cuda,
+#     libraries=libraries,
+#     library_dirs=library_dirs
+# )
 
-ffi.build()
+# ffi.build()
+setup(
+        name='extension',
+        ext_modules=[
+            CUDAExtension(
+                name='extension',
+               
+                sources=sources,
+              
+                extra_compile_args={'cxx': ['-g'],
+                                        'nvcc': ['-O2']}),
+        ],
+        cmdclass={
+            'build_ext': BuildExtension
+        })
